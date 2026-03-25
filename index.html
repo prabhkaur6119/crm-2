@@ -1,0 +1,1619 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BizCRM — Smart Local Business Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+/* ─── RESET & ROOT ─────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0f14;--bg2:#13161e;--bg3:#1a1e28;--bg4:#222736;
+  --card:#181c26;--card2:#1e2230;
+  --border:#2a2f42;--border2:#333a52;
+  --text:#e8eaf0;--text2:#9aa0b8;--text3:#5a6080;
+  --accent:#6c63ff;--accent2:#8b85ff;--accent-glow:rgba(108,99,255,.3);
+  --green:#2dd98f;--red:#ff5c7a;--orange:#ffaa3c;--blue:#4db8ff;
+  --cyan:#38d9d9;
+  --radius:14px;--radius-sm:8px;
+  --shadow:0 4px 24px rgba(0,0,0,.4);
+  --transition:.22s cubic-bezier(.4,0,.2,1);
+  --font-head:'Syne',sans-serif;--font-body:'DM Sans',sans-serif;
+}
+[data-theme="light"]{
+  --bg:#f0f2f8;--bg2:#e8ebf4;--bg3:#dde0ec;--bg4:#d0d4e8;
+  --card:#ffffff;--card2:#f5f6fc;
+  --border:#d0d4e8;--border2:#bcc0d8;
+  --text:#1a1e2e;--text2:#4a5070;--text3:#8890aa;
+  --accent:#5b52e8;--accent2:#7b74f0;--accent-glow:rgba(91,82,232,.15);
+  --shadow:0 4px 24px rgba(0,0,0,.08);
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;display:flex;overflow-x:hidden;transition:background var(--transition),color var(--transition)}
+
+/* ─── SCROLLBAR ──────────────────────────────── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+
+/* ─── SIDEBAR ──────────────────────────────────── */
+#sidebar{
+  width:240px;min-height:100vh;background:var(--card);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  position:fixed;left:0;top:0;z-index:100;
+  transition:transform var(--transition),background var(--transition);
+}
+.sidebar-logo{
+  display:flex;align-items:center;gap:10px;
+  padding:24px 20px 20px;border-bottom:1px solid var(--border);
+  font-family:var(--font-head);font-weight:800;font-size:1.1rem;letter-spacing:-.5px;
+}
+.logo-icon{
+  width:36px;height:36px;background:linear-gradient(135deg,var(--accent),var(--cyan));
+  border-radius:10px;display:flex;align-items:center;justify-content:center;
+  font-size:1rem;box-shadow:0 0 20px var(--accent-glow);
+}
+.sidebar-nav{flex:1;padding:16px 0;overflow-y:auto}
+.nav-section{font-size:.67rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--text3);padding:12px 20px 6px;margin-top:8px}
+.nav-item{
+  display:flex;align-items:center;gap:12px;
+  padding:11px 20px;margin:2px 10px;border-radius:10px;
+  cursor:pointer;font-size:.88rem;font-weight:500;
+  color:var(--text2);transition:all var(--transition);position:relative;
+}
+.nav-item:hover{background:var(--bg3);color:var(--text)}
+.nav-item.active{background:linear-gradient(135deg,var(--accent-glow),transparent);
+  color:var(--accent2);border:1px solid rgba(108,99,255,.2)}
+.nav-item .nav-icon{font-size:1rem;width:20px;text-align:center}
+.nav-badge{
+  margin-left:auto;background:var(--red);color:#fff;
+  font-size:.65rem;font-weight:700;padding:2px 6px;border-radius:99px;min-width:18px;text-align:center;
+}
+.sidebar-footer{padding:16px;border-top:1px solid var(--border)}
+.user-card{
+  display:flex;align-items:center;gap:10px;
+  padding:10px;border-radius:10px;background:var(--bg3);cursor:pointer;
+}
+.user-avatar{
+  width:34px;height:34px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),var(--cyan));
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:.85rem;color:#fff;flex-shrink:0;
+}
+.user-info{flex:1;min-width:0}
+.user-name{font-size:.82rem;font-weight:600;truncate:ellipsis;white-space:nowrap;overflow:hidden}
+.user-role{font-size:.7rem;color:var(--text3)}
+
+/* ─── MAIN LAYOUT ─────────────────────────────── */
+#main{margin-left:240px;flex:1;display:flex;flex-direction:column;min-height:100vh;transition:margin var(--transition)}
+.topbar{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 28px;background:var(--card);
+  border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:50;
+  transition:background var(--transition);
+}
+.topbar-title{font-family:var(--font-head);font-weight:700;font-size:1.1rem;flex:1}
+.topbar-actions{display:flex;align-items:center;gap:10px}
+.search-box{
+  display:flex;align-items:center;gap:8px;
+  background:var(--bg2);border:1px solid var(--border);border-radius:10px;
+  padding:8px 14px;font-size:.85rem;color:var(--text2);cursor:text;
+  transition:all var(--transition);min-width:200px;
+}
+.search-box:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+.search-box input{background:none;border:none;outline:none;color:var(--text);font-family:var(--font-body);font-size:.85rem;width:100%;min-width:140px}
+.btn-icon{
+  width:38px;height:38px;border-radius:10px;border:1px solid var(--border);
+  background:var(--bg2);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:1rem;color:var(--text2);transition:all var(--transition);position:relative;
+}
+.btn-icon:hover{background:var(--bg3);color:var(--text);border-color:var(--border2)}
+.notif-dot{
+  position:absolute;top:6px;right:6px;width:7px;height:7px;
+  background:var(--red);border-radius:50%;border:2px solid var(--card);
+}
+.theme-toggle{cursor:pointer}
+.content{padding:28px;flex:1;animation:fadeUp .4s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+/* ─── SECTIONS ───────────────────────────────── */
+.section{display:none}
+.section.active{display:block}
+
+/* ─── CARDS ──────────────────────────────────── */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.stat-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:20px;position:relative;overflow:hidden;cursor:default;
+  transition:transform var(--transition),box-shadow var(--transition),border-color var(--transition);
+}
+.stat-card:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:var(--border2)}
+.stat-card::before{
+  content:'';position:absolute;inset:0;opacity:0;
+  background:linear-gradient(135deg,var(--accent-glow),transparent);
+  transition:opacity var(--transition);
+}
+.stat-card:hover::before{opacity:1}
+.stat-icon{font-size:1.6rem;margin-bottom:12px}
+.stat-val{font-family:var(--font-head);font-size:1.9rem;font-weight:800;line-height:1}
+.stat-label{font-size:.78rem;color:var(--text2);margin-top:4px}
+.stat-change{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:.73rem;font-weight:600;margin-top:8px;
+  padding:3px 8px;border-radius:99px;
+}
+.stat-change.up{background:rgba(45,217,143,.15);color:var(--green)}
+.stat-change.down{background:rgba(255,92,122,.15);color:var(--red)}
+.stat-card.accent-blue .stat-val{color:var(--blue)}
+.stat-card.accent-green .stat-val{color:var(--green)}
+.stat-card.accent-orange .stat-val{color:var(--orange)}
+.stat-card.accent-purple .stat-val{color:var(--accent2)}
+.stat-card.accent-cyan .stat-val{color:var(--cyan)}
+
+/* ─── CHART SECTION ──────────────────────────── */
+.chart-grid{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:24px}
+@media(max-width:900px){.chart-grid{grid-template-columns:1fr}}
+.chart-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:20px;transition:background var(--transition);
+}
+.chart-card h3{font-family:var(--font-head);font-size:.95rem;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.chart-wrap{position:relative;height:220px}
+
+/* ─── TABLES ─────────────────────────────────── */
+.table-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:20px;margin-bottom:20px;transition:background var(--transition);
+}
+.table-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.table-header h3{font-family:var(--font-head);font-size:.95rem;font-weight:700}
+.table-actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:8px 16px;border-radius:9px;font-size:.83rem;font-weight:600;
+  cursor:pointer;border:none;font-family:var(--font-body);transition:all var(--transition);
+}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent2);box-shadow:0 4px 16px var(--accent-glow)}
+.btn-secondary{background:var(--bg3);color:var(--text);border:1px solid var(--border)}
+.btn-secondary:hover{background:var(--bg4);border-color:var(--border2)}
+.btn-sm{padding:6px 12px;font-size:.78rem}
+.btn-danger{background:rgba(255,92,122,.15);color:var(--red);border:1px solid rgba(255,92,122,.2)}
+.btn-danger:hover{background:rgba(255,92,122,.25)}
+.btn-success{background:rgba(45,217,143,.15);color:var(--green);border:1px solid rgba(45,217,143,.2)}
+.btn-success:hover{background:rgba(45,217,143,.25)}
+
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+thead th{
+  text-align:left;padding:10px 14px;
+  font-size:.72rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--text3);border-bottom:1px solid var(--border);
+}
+tbody tr{transition:background var(--transition);border-bottom:1px solid var(--border)}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--bg2)}
+tbody td{padding:12px 14px;color:var(--text)}
+.badge{
+  display:inline-block;padding:3px 9px;border-radius:99px;
+  font-size:.7rem;font-weight:600;
+}
+.badge-green{background:rgba(45,217,143,.15);color:var(--green)}
+.badge-red{background:rgba(255,92,122,.15);color:var(--red)}
+.badge-orange{background:rgba(255,170,60,.15);color:var(--orange)}
+.badge-blue{background:rgba(77,184,255,.15);color:var(--blue)}
+.badge-purple{background:rgba(108,99,255,.15);color:var(--accent2)}
+
+/* ─── PRODUCT CARDS ──────────────────────────── */
+.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:20px}
+.product-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  overflow:hidden;cursor:pointer;
+  transition:transform var(--transition),box-shadow var(--transition),border-color var(--transition);
+}
+.product-card:hover{transform:translateY(-4px);box-shadow:var(--shadow);border-color:var(--border2)}
+.product-img{
+  height:140px;background:var(--bg3);display:flex;align-items:center;justify-content:center;
+  font-size:3rem;position:relative;overflow:hidden;
+}
+.product-img img{width:100%;height:100%;object-fit:cover}
+.product-badge{
+  position:absolute;top:8px;right:8px;
+  background:var(--red);color:#fff;font-size:.65rem;font-weight:700;
+  padding:3px 7px;border-radius:99px;
+}
+.product-info{padding:14px}
+.product-name{font-weight:600;font-size:.88rem;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.product-price{color:var(--accent2);font-family:var(--font-head);font-weight:700}
+.product-stock{font-size:.75rem;color:var(--text2);margin-top:4px}
+.stock-bar{height:4px;background:var(--bg3);border-radius:99px;margin-top:6px;overflow:hidden}
+.stock-fill{height:100%;border-radius:99px;background:var(--green);transition:width .6s ease}
+.stock-fill.low{background:var(--red)}
+.stock-fill.mid{background:var(--orange)}
+
+/* ─── FORMS / MODALS ──────────────────────────── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;opacity:0;pointer-events:none;transition:opacity var(--transition);
+  backdrop-filter:blur(4px);
+}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  width:100%;max-width:500px;max-height:90vh;overflow-y:auto;
+  transform:translateY(20px) scale(.97);transition:transform var(--transition);
+}
+.modal-overlay.open .modal{transform:translateY(0) scale(1)}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border)}
+.modal-header h3{font-family:var(--font-head);font-size:1rem;font-weight:700}
+.modal-close{background:none;border:none;cursor:pointer;font-size:1.2rem;color:var(--text2);padding:4px 8px;border-radius:6px;transition:all var(--transition)}
+.modal-close:hover{background:var(--bg3);color:var(--text)}
+.modal-body{padding:24px}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:.82rem;font-weight:600;margin-bottom:6px;color:var(--text2)}
+.form-control{
+  width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:9px;
+  padding:10px 14px;color:var(--text);font-family:var(--font-body);font-size:.88rem;
+  transition:border-color var(--transition),box-shadow var(--transition);outline:none;
+}
+.form-control:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modal-footer{display:flex;justify-content:flex-end;gap:10px;padding:16px 24px;border-top:1px solid var(--border)}
+
+/* ─── AI INSIGHTS ──────────────────────────────── */
+.insight-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:24px}
+.insight-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:20px;position:relative;overflow:hidden;
+  transition:transform var(--transition),border-color var(--transition);
+}
+.insight-card:hover{transform:translateY(-3px);border-color:var(--border2)}
+.insight-card::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--accent),var(--cyan));
+}
+.insight-icon{font-size:1.8rem;margin-bottom:12px}
+.insight-title{font-family:var(--font-head);font-size:.95rem;font-weight:700;margin-bottom:6px}
+.insight-text{font-size:.83rem;color:var(--text2);line-height:1.6}
+.insight-meta{
+  margin-top:12px;padding-top:12px;border-top:1px solid var(--border);
+  font-size:.73rem;color:var(--text3);display:flex;align-items:center;gap:6px;
+}
+
+/* ─── CHATBOT ──────────────────────────────────── */
+#chat-fab{
+  position:fixed;bottom:28px;right:28px;z-index:300;
+  width:54px;height:54px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),var(--cyan));
+  border:none;cursor:pointer;font-size:1.4rem;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 24px var(--accent-glow);
+  transition:transform var(--transition),box-shadow var(--transition);
+  animation:pulse 2.5s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{box-shadow:0 4px 24px var(--accent-glow)}50%{box-shadow:0 4px 36px rgba(108,99,255,.5)}}
+#chat-fab:hover{transform:scale(1.1);animation:none}
+
+#chat-window{
+  position:fixed;bottom:94px;right:28px;z-index:300;
+  width:340px;max-height:480px;background:var(--card);
+  border:1px solid var(--border);border-radius:var(--radius);
+  display:flex;flex-direction:column;
+  transform:scale(.9) translateY(20px);transform-origin:bottom right;
+  opacity:0;pointer-events:none;transition:all var(--transition);
+  box-shadow:0 8px 40px rgba(0,0,0,.4);
+}
+#chat-window.open{transform:scale(1) translateY(0);opacity:1;pointer-events:all}
+.chat-header{
+  display:flex;align-items:center;gap:10px;
+  padding:14px 16px;border-bottom:1px solid var(--border);
+}
+.chat-avatar{
+  width:32px;height:32px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),var(--cyan));
+  display:flex;align-items:center;justify-content:center;font-size:.9rem;
+}
+.chat-header-info .chat-name{font-size:.85rem;font-weight:700}
+.chat-header-info .chat-status{font-size:.7rem;color:var(--green)}
+.chat-messages{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;min-height:0;max-height:280px}
+.chat-msg{max-width:85%;font-size:.82rem;line-height:1.5}
+.chat-msg.bot{align-self:flex-start}
+.chat-msg.user{align-self:flex-end}
+.msg-bubble{
+  padding:9px 13px;border-radius:14px;
+  transition:background var(--transition);
+}
+.chat-msg.bot .msg-bubble{background:var(--bg3);border-radius:4px 14px 14px 14px;color:var(--text)}
+.chat-msg.user .msg-bubble{background:var(--accent);color:#fff;border-radius:14px 14px 4px 14px}
+.chat-msg.bot .msg-time,.chat-msg.user .msg-time{font-size:.65rem;color:var(--text3);margin-top:3px}
+.chat-msg.user .msg-time{text-align:right}
+.chat-suggestions{display:flex;flex-wrap:wrap;gap:6px;padding:10px 14px;border-top:1px solid var(--border)}
+.chip{
+  background:var(--bg3);border:1px solid var(--border);border-radius:99px;
+  padding:5px 11px;font-size:.72rem;font-weight:500;cursor:pointer;color:var(--text2);
+  transition:all var(--transition);white-space:nowrap;
+}
+.chip:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+.chat-input-row{display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--border)}
+.chat-input{
+  flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:99px;
+  padding:8px 14px;font-size:.82rem;color:var(--text);outline:none;font-family:var(--font-body);
+}
+.chat-input:focus{border-color:var(--accent)}
+.chat-send{
+  width:34px;height:34px;border-radius:50%;background:var(--accent);border:none;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.85rem;color:#fff;
+  transition:transform var(--transition);flex-shrink:0;
+}
+.chat-send:hover{transform:scale(1.1)}
+.typing-dots{display:flex;gap:4px;padding:4px 2px}
+.typing-dots span{width:6px;height:6px;background:var(--text3);border-radius:50%;animation:dot .8s ease-in-out infinite}
+.typing-dots span:nth-child(2){animation-delay:.2s}
+.typing-dots span:nth-child(3){animation-delay:.4s}
+@keyframes dot{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+
+/* ─── NOTIFICATIONS ──────────────────────────── */
+#notif-panel{
+  position:fixed;top:62px;right:16px;z-index:150;
+  width:320px;background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);box-shadow:var(--shadow);
+  transform:translateY(-10px);opacity:0;pointer-events:none;
+  transition:all var(--transition);max-height:420px;overflow-y:auto;
+}
+#notif-panel.open{transform:translateY(0);opacity:1;pointer-events:all}
+.notif-header{padding:14px 16px;border-bottom:1px solid var(--border);font-family:var(--font-head);font-size:.9rem;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+.notif-item{
+  display:flex;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);
+  cursor:pointer;transition:background var(--transition);
+}
+.notif-item:hover{background:var(--bg2)}
+.notif-item:last-child{border-bottom:none}
+.notif-dot2{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.notif-text{font-size:.82rem;line-height:1.4}
+.notif-time{font-size:.7rem;color:var(--text3);margin-top:3px}
+
+/* ─── LOYALTY BAR ─────────────────────────────── */
+.loyalty-bar{height:6px;background:var(--bg3);border-radius:99px;overflow:hidden;margin-top:6px}
+.loyalty-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--cyan))}
+
+/* ─── SEARCH RESULT HIGHLIGHT ─────────────────── */
+mark{background:rgba(108,99,255,.25);color:var(--accent2);border-radius:3px;padding:0 2px}
+
+/* ─── FILTERS ─────────────────────────────────── */
+.filter-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+select.form-control{cursor:pointer}
+
+/* ─── LOADING SPINNER ─────────────────────────── */
+.spinner{
+  width:32px;height:32px;border:3px solid var(--border);
+  border-top-color:var(--accent);border-radius:50%;
+  animation:spin .7s linear infinite;margin:40px auto;display:block;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ─── EMPTY STATE ──────────────────────────────── */
+.empty-state{
+  text-align:center;padding:60px 20px;color:var(--text2);
+}
+.empty-state .empty-icon{font-size:3.5rem;margin-bottom:16px;opacity:.5}
+.empty-state p{font-size:.9rem}
+
+/* ─── TOAST ───────────────────────────────────── */
+#toast-container{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:400;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{
+  background:var(--card2);border:1px solid var(--border2);border-radius:10px;
+  padding:12px 20px;font-size:.85rem;display:flex;align-items:center;gap:10px;
+  box-shadow:0 8px 32px rgba(0,0,0,.3);color:var(--text);
+  animation:toastIn .3s ease both;pointer-events:all;white-space:nowrap;
+}
+.toast.success{border-left:3px solid var(--green)}
+.toast.error{border-left:3px solid var(--red)}
+.toast.info{border-left:3px solid var(--accent)}
+@keyframes toastIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* ─── CUSTOMER CARD ──────────────────────────── */
+.customer-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-bottom:20px}
+.customer-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:20px;transition:all var(--transition);cursor:pointer;
+}
+.customer-card:hover{transform:translateY(-3px);border-color:var(--border2);box-shadow:var(--shadow)}
+.customer-top{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.cust-avatar{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1rem;color:#fff;flex-shrink:0}
+.cust-name{font-weight:600;font-size:.9rem}
+.cust-email{font-size:.75rem;color:var(--text2);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cust-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:.78rem}
+.cust-stat-val{font-family:var(--font-head);font-weight:700;font-size:1rem}
+.cust-stat-label{color:var(--text3);font-size:.7rem}
+
+/* ─── RESPONSIVE ──────────────────────────────── */
+#sidebar-toggle{display:none;background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--text2);padding:4px}
+@media(max-width:768px){
+  #sidebar{transform:translateX(-100%)}
+  #sidebar.open{transform:translateX(0)}
+  #main{margin-left:0}
+  #sidebar-toggle{display:block}
+  .stat-grid{grid-template-columns:1fr 1fr}
+  .chart-grid{grid-template-columns:1fr}
+  .form-row{grid-template-columns:1fr}
+  #chat-window{width:calc(100vw - 40px);right:20px}
+}
+@media(max-width:480px){
+  .stat-grid{grid-template-columns:1fr}
+  .topbar{padding:12px 16px}
+  .content{padding:16px}
+}
+
+/* ─── SECTION PAGE HEADER ─────────────────────── */
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+.page-title{font-family:var(--font-head);font-size:1.5rem;font-weight:800}
+.page-subtitle{font-size:.83rem;color:var(--text2);margin-top:2px}
+
+/* ─── SALE FORM SPECIAL ───────────────────────── */
+.sale-item-row{display:flex;gap:8px;margin-bottom:8px;align-items:center}
+.sale-item-row .form-control{flex:1}
+
+/* ─── REVENUE SUMMARY ─────────────────────────── */
+.rev-stat{text-align:center;padding:12px}
+.rev-stat-val{font-family:var(--font-head);font-size:1.4rem;font-weight:800}
+.rev-stat-label{font-size:.75rem;color:var(--text2);margin-top:4px}
+
+/* ─── SIDEBAR OVERLAY ─────────────────────────── */
+#sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:90}
+@media(max-width:768px){#sidebar-overlay.active{display:block}}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">🏪</div>
+    <span>BizCRM</span>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Overview</div>
+    <div class="nav-item active" data-section="dashboard" onclick="navigate(this)">
+      <span class="nav-icon">📊</span> Dashboard
+    </div>
+    <div class="nav-section">Manage</div>
+    <div class="nav-item" data-section="customers" onclick="navigate(this)">
+      <span class="nav-icon">👥</span> Customers
+    </div>
+    <div class="nav-item" data-section="inventory" onclick="navigate(this)">
+      <span class="nav-icon">📦</span> Inventory
+      <span class="nav-badge" id="low-stock-badge">0</span>
+    </div>
+    <div class="nav-item" data-section="sales" onclick="navigate(this)">
+      <span class="nav-icon">💰</span> Sales
+    </div>
+    <div class="nav-section">Intelligence</div>
+    <div class="nav-item" data-section="insights" onclick="navigate(this)">
+      <span class="nav-icon">🤖</span> AI Insights
+    </div>
+    <div class="nav-section">Tools</div>
+    <div class="nav-item" data-section="reports" onclick="navigate(this)">
+      <span class="nav-icon">📄</span> Reports
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar">A</div>
+      <div class="user-info">
+        <div class="user-name">Admin User</div>
+        <div class="user-role">Administrator</div>
+      </div>
+    </div>
+  </div>
+</aside>
+<div id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<!-- MAIN -->
+<div id="main">
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <button id="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+    <span class="topbar-title" id="page-title">Dashboard</span>
+    <div class="topbar-actions">
+      <div class="search-box">
+        <span>🔍</span>
+        <input type="text" id="global-search" placeholder="Search anything…" oninput="globalSearch(this.value)">
+      </div>
+      <button class="btn-icon theme-toggle" onclick="toggleTheme()" title="Toggle Theme">🌙</button>
+      <button class="btn-icon" onclick="toggleNotif()" title="Notifications">
+        🔔<span class="notif-dot"></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- NOTIFICATION PANEL -->
+  <div id="notif-panel">
+    <div class="notif-header">Notifications <span style="font-size:.75rem;color:var(--text3);cursor:pointer" onclick="clearNotifs()">Clear all</span></div>
+    <div id="notif-list"></div>
+  </div>
+
+  <!-- CONTENT -->
+  <main class="content">
+
+    <!-- ── DASHBOARD ─────────────────────────── -->
+    <div class="section active" id="sec-dashboard">
+      <div class="page-header">
+        <div><div class="page-title">Welcome back 👋</div><div class="page-subtitle" id="dash-date"></div></div>
+        <button class="btn btn-primary" onclick="refreshDashboard()">↻ Refresh</button>
+      </div>
+      <div class="stat-grid" id="dash-stats"></div>
+      <div class="chart-grid">
+        <div class="chart-card">
+          <h3>📈 Monthly Revenue</h3>
+          <div class="chart-wrap"><canvas id="revenueChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>🏆 Top Products</h3>
+          <div class="chart-wrap"><canvas id="topProductsChart"></canvas></div>
+        </div>
+      </div>
+      <div class="chart-grid">
+        <div class="chart-card">
+          <h3>📅 Sales by Day of Week</h3>
+          <div class="chart-wrap"><canvas id="dowChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>👥 Customer Categories</h3>
+          <div class="chart-wrap"><canvas id="custCatChart"></canvas></div>
+        </div>
+      </div>
+      <div class="table-card">
+        <div class="table-header"><h3>🔴 Low Stock Alerts</h3></div>
+        <div id="low-stock-table"></div>
+      </div>
+      <div class="table-card">
+        <div class="table-header"><h3>🕐 Recent Transactions</h3></div>
+        <div id="recent-tx-table"></div>
+      </div>
+    </div>
+
+    <!-- ── CUSTOMERS ─────────────────────────── -->
+    <div class="section" id="sec-customers">
+      <div class="page-header">
+        <div><div class="page-title">Customers</div><div class="page-subtitle">Manage your customer base</div></div>
+        <button class="btn btn-primary" onclick="openModal('customerModal')">+ Add Customer</button>
+      </div>
+      <div class="filter-row">
+        <input type="text" class="form-control" id="cust-search" placeholder="🔍 Search customers…" oninput="renderCustomers()" style="max-width:280px">
+        <select class="form-control" id="cust-filter" onchange="renderCustomers()" style="max-width:160px">
+          <option value="">All Tiers</option>
+          <option value="Gold">Gold</option>
+          <option value="Silver">Silver</option>
+          <option value="Bronze">Bronze</option>
+        </select>
+      </div>
+      <div class="customer-grid" id="customer-grid"></div>
+    </div>
+
+    <!-- ── INVENTORY ─────────────────────────── -->
+    <div class="section" id="sec-inventory">
+      <div class="page-header">
+        <div><div class="page-title">Inventory</div><div class="page-subtitle">Manage products & stock levels</div></div>
+        <button class="btn btn-primary" onclick="openModal('productModal')">+ Add Product</button>
+      </div>
+      <div class="filter-row">
+        <input type="text" class="form-control" id="prod-search" placeholder="🔍 Search products…" oninput="renderProducts()" style="max-width:280px">
+        <select class="form-control" id="prod-cat" onchange="renderProducts()" style="max-width:160px">
+          <option value="">All Categories</option>
+          <option value="Clothing">Clothing</option>
+          <option value="Accessories">Accessories</option>
+          <option value="Electronics">Electronics</option>
+          <option value="Footwear">Footwear</option>
+          <option value="Other">Other</option>
+        </select>
+        <select class="form-control" id="prod-stock-filter" onchange="renderProducts()" style="max-width:160px">
+          <option value="">All Stock</option>
+          <option value="low">Low Stock</option>
+          <option value="ok">In Stock</option>
+        </select>
+      </div>
+      <div class="product-grid" id="product-grid"></div>
+    </div>
+
+    <!-- ── SALES ─────────────────────────────── -->
+    <div class="section" id="sec-sales">
+      <div class="page-header">
+        <div><div class="page-title">Sales</div><div class="page-subtitle">Record and track all transactions</div></div>
+        <button class="btn btn-primary" onclick="openModal('saleModal')">+ New Sale</button>
+      </div>
+      <div class="stat-grid" id="sales-stats"></div>
+      <div class="filter-row">
+        <input type="date" class="form-control" id="sales-from" style="max-width:160px">
+        <input type="date" class="form-control" id="sales-to" style="max-width:160px">
+        <button class="btn btn-secondary btn-sm" onclick="filterSales()">Apply Filter</button>
+        <button class="btn btn-secondary btn-sm" onclick="clearSalesFilter()">Clear</button>
+      </div>
+      <div class="table-card">
+        <div class="table-header">
+          <h3>Sales History</h3>
+          <div class="table-actions">
+            <button class="btn btn-secondary btn-sm" onclick="exportSalesCSV()">⬇ CSV</button>
+          </div>
+        </div>
+        <div id="sales-table"></div>
+      </div>
+    </div>
+
+    <!-- ── AI INSIGHTS ────────────────────────── -->
+    <div class="section" id="sec-insights">
+      <div class="page-header">
+        <div><div class="page-title">AI Insights</div><div class="page-subtitle">Powered by your business data</div></div>
+        <button class="btn btn-primary" onclick="generateInsights()">🔄 Regenerate</button>
+      </div>
+      <div class="insight-grid" id="insight-grid"></div>
+      <div class="chart-card" style="margin-bottom:20px">
+        <h3>📊 Demand Forecast (Next 6 Months)</h3>
+        <div class="chart-wrap"><canvas id="forecastChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ── REPORTS ────────────────────────────── -->
+    <div class="section" id="sec-reports">
+      <div class="page-header">
+        <div><div class="page-title">Reports</div><div class="page-subtitle">Export and download business reports</div></div>
+      </div>
+      <div class="stat-grid">
+        <div class="stat-card" style="cursor:pointer" onclick="exportSalesCSV()">
+          <div class="stat-icon">📊</div>
+          <div class="stat-val" style="font-size:1.1rem">Sales Report</div>
+          <div class="stat-label">CSV Export</div>
+          <div style="margin-top:10px"><span class="badge badge-green">⬇ Download</span></div>
+        </div>
+        <div class="stat-card" style="cursor:pointer" onclick="exportCustomersCSV()">
+          <div class="stat-icon">👥</div>
+          <div class="stat-val" style="font-size:1.1rem">Customer Report</div>
+          <div class="stat-label">CSV Export</div>
+          <div style="margin-top:10px"><span class="badge badge-blue">⬇ Download</span></div>
+        </div>
+        <div class="stat-card" style="cursor:pointer" onclick="exportInventoryCSV()">
+          <div class="stat-icon">📦</div>
+          <div class="stat-val" style="font-size:1.1rem">Inventory Report</div>
+          <div class="stat-label">CSV Export</div>
+          <div style="margin-top:10px"><span class="badge badge-orange">⬇ Download</span></div>
+        </div>
+        <div class="stat-card" style="cursor:pointer" onclick="exportInsightsPDF()">
+          <div class="stat-icon">🤖</div>
+          <div class="stat-val" style="font-size:1.1rem">AI Summary PDF</div>
+          <div class="stat-label">PDF Export</div>
+          <div style="margin-top:10px"><span class="badge badge-purple">⬇ Download</span></div>
+        </div>
+      </div>
+      <div class="table-card">
+        <div class="table-header"><h3>Report History</h3></div>
+        <div id="report-history"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ── CHATBOT ────────────────────────────────── -->
+<button id="chat-fab" onclick="toggleChat()" title="AI Assistant">🤖</button>
+<div id="chat-window">
+  <div class="chat-header">
+    <div class="chat-avatar">🤖</div>
+    <div class="chat-header-info">
+      <div class="chat-name">BizAI Assistant</div>
+      <div class="chat-status">● Online</div>
+    </div>
+    <button style="margin-left:auto;background:none;border:none;cursor:pointer;font-size:1rem;color:var(--text2)" onclick="toggleChat()">✕</button>
+  </div>
+  <div class="chat-messages" id="chat-messages"></div>
+  <div class="chat-suggestions" id="chat-suggestions"></div>
+  <div class="chat-input-row">
+    <input class="chat-input" id="chat-input" placeholder="Ask anything…" onkeydown="if(event.key==='Enter')sendChat()">
+    <button class="chat-send" onclick="sendChat()">➤</button>
+  </div>
+</div>
+
+<!-- ── MODALS ─────────────────────────────────── -->
+
+<!-- Customer Modal -->
+<div class="modal-overlay" id="customerModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="cust-modal-title">Add Customer</h3>
+      <button class="modal-close" onclick="closeModal('customerModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="cust-edit-id">
+      <div class="form-row">
+        <div class="form-group">
+          <label>First Name</label>
+          <input class="form-control" id="cust-fname" placeholder="e.g. John">
+        </div>
+        <div class="form-group">
+          <label>Last Name</label>
+          <input class="form-control" id="cust-lname" placeholder="e.g. Doe">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input class="form-control" id="cust-email" type="email" placeholder="john@example.com">
+      </div>
+      <div class="form-group">
+        <label>Phone</label>
+        <input class="form-control" id="cust-phone" placeholder="+91 98765 43210">
+      </div>
+      <div class="form-group">
+        <label>Address</label>
+        <input class="form-control" id="cust-address" placeholder="City, State">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('customerModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCustomer()">Save Customer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Product Modal -->
+<div class="modal-overlay" id="productModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="prod-modal-title">Add Product</h3>
+      <button class="modal-close" onclick="closeModal('productModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="prod-edit-id">
+      <div class="form-group">
+        <label>Product Name</label>
+        <input class="form-control" id="prod-name" placeholder="e.g. Blue Denim Jacket">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Category</label>
+          <select class="form-control" id="prod-category">
+            <option>Clothing</option><option>Accessories</option>
+            <option>Electronics</option><option>Footwear</option><option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Price (₹)</label>
+          <input class="form-control" id="prod-price" type="number" placeholder="999">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Stock Quantity</label>
+          <input class="form-control" id="prod-stock" type="number" placeholder="50">
+        </div>
+        <div class="form-group">
+          <label>Low Stock Alert At</label>
+          <input class="form-control" id="prod-low" type="number" placeholder="10">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Product Emoji / Image URL</label>
+        <input class="form-control" id="prod-image" placeholder="👕 or https://...">
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <input class="form-control" id="prod-desc" placeholder="Brief product description">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('productModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveProduct()">Save Product</button>
+    </div>
+  </div>
+</div>
+
+<!-- Sale Modal -->
+<div class="modal-overlay" id="saleModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Record New Sale</h3>
+      <button class="modal-close" onclick="closeModal('saleModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Customer</label>
+        <select class="form-control" id="sale-customer"></select>
+      </div>
+      <div class="form-group">
+        <label>Product</label>
+        <select class="form-control" id="sale-product" onchange="updateSalePrice()"></select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Quantity</label>
+          <input class="form-control" id="sale-qty" type="number" value="1" min="1" oninput="updateSalePrice()">
+        </div>
+        <div class="form-group">
+          <label>Unit Price (₹)</label>
+          <input class="form-control" id="sale-price" type="number" readonly>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Total Amount</label>
+        <input class="form-control" id="sale-total" type="number" readonly style="font-weight:700;font-size:1.1rem">
+      </div>
+      <div class="form-group">
+        <label>Payment Method</label>
+        <select class="form-control" id="sale-method">
+          <option>Cash</option><option>UPI</option><option>Card</option><option>NetBanking</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Date</label>
+        <input class="form-control" id="sale-date" type="date">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('saleModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSale()">Record Sale</button>
+    </div>
+  </div>
+</div>
+
+<!-- Customer Detail Modal -->
+<div class="modal-overlay" id="custDetailModal">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-header">
+      <h3>Customer Profile</h3>
+      <button class="modal-close" onclick="closeModal('custDetailModal')">✕</button>
+    </div>
+    <div class="modal-body" id="cust-detail-body"></div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  DATA STORE (In-memory; replace with API calls)
+// ═══════════════════════════════════════════════
+const DB = {
+  customers: [
+    {id:1,fname:'Priya',lname:'Sharma',email:'priya@email.com',phone:'9876543210',address:'Dehradun, UK',total_spent:14800,visits:12,joined:'2024-01-15'},
+    {id:2,fname:'Rahul',lname:'Verma',email:'rahul@email.com',phone:'9812345678',address:'Delhi',total_spent:8200,visits:7,joined:'2024-03-22'},
+    {id:3,fname:'Anjali',lname:'Singh',email:'anjali@email.com',phone:'9765432101',address:'Haridwar, UK',total_spent:22500,visits:18,joined:'2023-11-10'},
+    {id:4,fname:'Mohammed',lname:'Khan',email:'khan@email.com',phone:'9900112233',address:'Dehradun, UK',total_spent:3400,visits:3,joined:'2024-06-01'},
+    {id:5,fname:'Sunita',lname:'Negi',email:'sunita@email.com',phone:'9811122334',address:'Mussoorie, UK',total_spent:6700,visits:5,joined:'2024-02-14'},
+  ],
+  products: [
+    {id:1,name:'Blue Denim Jacket',category:'Clothing',price:1299,stock:32,low:10,image:'🧥',desc:'Classic blue denim',sold:45},
+    {id:2,name:'iPhone Case Pro',category:'Accessories',price:499,stock:7,low:10,image:'📱',desc:'Protective iPhone case',sold:88},
+    {id:3,name:'White Sneakers',category:'Footwear',price:1899,stock:15,low:8,image:'👟',desc:'Classic white shoes',sold:31},
+    {id:4,name:'Cotton T-Shirt',category:'Clothing',price:349,stock:3,low:10,image:'👕',desc:'100% cotton t-shirt',sold:120},
+    {id:5,name:'Wireless Earbuds',category:'Electronics',price:2499,stock:20,low:5,image:'🎧',desc:'Bluetooth earbuds',sold:55},
+    {id:6,name:'Leather Wallet',category:'Accessories',price:799,stock:42,low:10,image:'👛',desc:'Genuine leather wallet',sold:67},
+    {id:7,name:'Cargo Shorts',category:'Clothing',price:699,stock:5,low:8,image:'🩳',desc:'Multi-pocket cargo shorts',sold:29},
+    {id:8,name:'Running Shoes',category:'Footwear',price:2199,stock:18,low:8,image:'👟',desc:'Lightweight running shoes',sold:43},
+  ],
+  sales: [
+    {id:1,customer_id:1,product_id:1,qty:2,price:1299,total:2598,method:'UPI',date:'2025-01-15'},
+    {id:2,customer_id:2,product_id:4,qty:3,price:349,total:1047,method:'Cash',date:'2025-01-18'},
+    {id:3,customer_id:3,product_id:5,qty:1,price:2499,total:2499,method:'Card',date:'2025-01-20'},
+    {id:4,customer_id:1,product_id:2,qty:2,price:499,total:998,method:'UPI',date:'2025-02-02'},
+    {id:5,customer_id:4,product_id:3,qty:1,price:1899,total:1899,method:'Cash',date:'2025-02-10'},
+    {id:6,customer_id:3,product_id:6,qty:2,price:799,total:1598,method:'Card',date:'2025-02-14'},
+    {id:7,customer_id:5,product_id:4,qty:4,price:349,total:1396,method:'UPI',date:'2025-03-05'},
+    {id:8,customer_id:2,product_id:7,qty:2,price:699,total:1398,method:'Cash',date:'2025-03-12'},
+    {id:9,customer_id:3,product_id:1,qty:1,price:1299,total:1299,method:'UPI',date:'2025-03-18'},
+    {id:10,customer_id:1,product_id:8,qty:1,price:2199,total:2199,method:'NetBanking',date:'2025-04-01'},
+    {id:11,customer_id:5,product_id:6,qty:1,price:799,total:799,method:'Cash',date:'2025-04-10'},
+    {id:12,customer_id:4,product_id:2,qty:3,price:499,total:1497,method:'UPI',date:'2025-04-22'},
+  ],
+  notifications: [
+    {type:'red',text:'Cotton T-Shirt stock critically low (3 left)',time:'10 min ago'},
+    {type:'red',text:'iPhone Case Pro below threshold (7 left)',time:'25 min ago'},
+    {type:'green',text:'New customer Anjali Singh reached Gold tier!',time:'1 hr ago'},
+    {type:'blue',text:'Sales milestone: ₹10,000 this week 🎉',time:'2 hrs ago'},
+    {type:'orange',text:'Cargo Shorts running low (5 left)',time:'3 hrs ago'},
+  ]
+};
+
+// ═══════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════
+const $ = id => document.getElementById(id);
+const fmt = n => '₹'+Number(n).toLocaleString('en-IN');
+const today = () => new Date().toISOString().split('T')[0];
+const avatarColors = ['#6c63ff','#2dd98f','#ff5c7a','#ffaa3c','#4db8ff','#38d9d9','#e75480','#70b8ff'];
+const getColor = str => avatarColors[str.charCodeAt(0)%avatarColors.length];
+const getLoyaltyTier = spent => spent>=15000?'Gold':spent>=7000?'Silver':'Bronze';
+const getLoyaltyPct = spent => Math.min(100,Math.round(spent/250));
+const getBadgeClass = tier => tier==='Gold'?'badge-orange':tier==='Silver'?'badge-blue':'badge-green';
+
+function toast(msg,type='info'){
+  const el=document.createElement('div');
+  el.className=`toast ${type}`;
+  el.textContent={'info':'ℹ️','success':'✅','error':'❌'}[type]+' '+msg;
+  $('toast-container').appendChild(el);
+  setTimeout(()=>{el.style.opacity='0';el.style.transform='translateY(12px)';setTimeout(()=>el.remove(),400)},3000);
+}
+
+function openModal(id){$(id).classList.add('open')}
+function closeModal(id){$(id).classList.remove('open')}
+
+function exportCSV(filename,rows){
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(rows.join('\n'));
+  a.download=filename;a.click();
+  toast(`${filename} downloaded`,'success');
+  DB.notifications.unshift({type:'blue',text:`Report "${filename}" generated`,time:'Just now'});
+  renderNotifs();
+}
+
+// ═══════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════
+const sectionNames={dashboard:'Dashboard',customers:'Customers',inventory:'Inventory',sales:'Sales',insights:'AI Insights',reports:'Reports'};
+function navigate(el){
+  document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));
+  el.classList.add('active');
+  const sec=el.dataset.section;
+  $(`sec-${sec}`).classList.add('active');
+  $('page-title').textContent=sectionNames[sec]||sec;
+  if(sec==='insights')generateInsights();
+  if(sec==='sales')renderSalesStats();
+  closeSidebar();
+}
+function toggleSidebar(){
+  $('sidebar').classList.toggle('open');
+  $('sidebar-overlay').classList.toggle('active');
+}
+function closeSidebar(){
+  $('sidebar').classList.remove('open');
+  $('sidebar-overlay').classList.remove('active');
+}
+
+// ═══════════════════════════════════════════════════
+// THEME
+// ═══════════════════════════════════════════════════
+let isDark=true;
+function toggleTheme(){
+  isDark=!isDark;
+  document.documentElement.setAttribute('data-theme',isDark?'dark':'light');
+  document.querySelector('.theme-toggle').textContent=isDark?'🌙':'☀️';
+  toast(`${isDark?'Dark':'Light'} mode`,'info');
+  redrawCharts();
+}
+
+// ═══════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════
+function refreshDashboard(){
+  renderDashStats();
+  renderLowStockTable();
+  renderRecentTx();
+  redrawCharts();
+  toast('Dashboard refreshed','success');
+}
+
+function renderDashStats(){
+  const totalSales=DB.sales.reduce((a,s)=>a+s.total,0);
+  const thisMonth=new Date().getMonth();
+  const monthSales=DB.sales.filter(s=>new Date(s.date).getMonth()===thisMonth).reduce((a,s)=>a+s.total,0);
+  const lowStock=DB.products.filter(p=>p.stock<=p.low).length;
+  const topProd=DB.products.reduce((a,b)=>b.sold>a.sold?b:a,DB.products[0]);
+  $('dash-stats').innerHTML=`
+    <div class="stat-card accent-green"><div class="stat-icon">💰</div><div class="stat-val">${fmt(totalSales)}</div><div class="stat-label">Total Revenue</div><span class="stat-change up">↑ 12.4%</span></div>
+    <div class="stat-card accent-blue"><div class="stat-icon">📅</div><div class="stat-val">${fmt(monthSales)}</div><div class="stat-label">This Month</div><span class="stat-change up">↑ 8.1%</span></div>
+    <div class="stat-card accent-purple"><div class="stat-icon">🛒</div><div class="stat-val">${DB.sales.length}</div><div class="stat-label">Total Orders</div><span class="stat-change up">↑ 5.3%</span></div>
+    <div class="stat-card accent-cyan"><div class="stat-icon">👥</div><div class="stat-val">${DB.customers.length}</div><div class="stat-label">Customers</div><span class="stat-change up">↑ 2 new</span></div>
+    <div class="stat-card accent-orange"><div class="stat-icon">🔴</div><div class="stat-val">${lowStock}</div><div class="stat-label">Low Stock Items</div><span class="stat-change down">⚠ Needs restock</span></div>
+    <div class="stat-card accent-green"><div class="stat-icon">🏆</div><div class="stat-val" style="font-size:1rem">${topProd.name}</div><div class="stat-label">Best Seller (${topProd.sold} sold)</div></div>
+  `;
+  $('low-stock-badge').textContent=lowStock;
+}
+
+function renderLowStockTable(){
+  const low=DB.products.filter(p=>p.stock<=p.low);
+  if(!low.length){$('low-stock-table').innerHTML='<div class="empty-state"><div class="empty-icon">✅</div><p>All products are well stocked!</p></div>';return;}
+  $('low-stock-table').innerHTML=`<table><thead><tr><th>Product</th><th>Category</th><th>Stock</th><th>Threshold</th><th>Action</th></tr></thead><tbody>
+    ${low.map(p=>`<tr>
+      <td><span style="font-size:1.2rem;margin-right:8px">${p.image}</span>${p.name}</td>
+      <td><span class="badge badge-blue">${p.category}</span></td>
+      <td><span class="badge badge-red">${p.stock} left</span></td>
+      <td>${p.low}</td>
+      <td><button class="btn btn-sm btn-success" onclick="quickRestock(${p.id})">+ Restock</button></td>
+    </tr>`).join('')}
+  </tbody></table>`;
+}
+
+function quickRestock(id){
+  const p=DB.products.find(x=>x.id===id);
+  if(!p)return;
+  p.stock+=50;
+  toast(`Restocked ${p.name} (+50 units)`,'success');
+  renderLowStockTable();
+  renderDashStats();
+  renderProducts();
+  $('low-stock-badge').textContent=DB.products.filter(x=>x.stock<=x.low).length;
+}
+
+function renderRecentTx(){
+  const recent=[...DB.sales].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,6);
+  $('recent-tx-table').innerHTML=`<table><thead><tr><th>#</th><th>Customer</th><th>Product</th><th>Amount</th><th>Method</th><th>Date</th></tr></thead><tbody>
+    ${recent.map(s=>{
+      const c=DB.customers.find(x=>x.id===s.customer_id)||{fname:'?',lname:''};
+      const p=DB.products.find(x=>x.id===s.product_id)||{name:'?'};
+      return`<tr>
+        <td style="color:var(--text3)">#${s.id}</td>
+        <td>${c.fname} ${c.lname}</td>
+        <td>${p.image||''} ${p.name}</td>
+        <td style="font-weight:700;color:var(--green)">${fmt(s.total)}</td>
+        <td><span class="badge badge-purple">${s.method}</span></td>
+        <td style="color:var(--text2)">${s.date}</td>
+      </tr>`;
+    }).join('')}
+  </tbody></table>`;
+}
+
+// ═══════════════════════════════════════════════════
+// CHARTS
+// ═══════════════════════════════════════════════════
+let charts={};
+function getChartColors(){
+  return{grid:'rgba(255,255,255,.06)',text:getComputedStyle(document.documentElement).getPropertyValue('--text2').trim(),border:getComputedStyle(document.documentElement).getPropertyValue('--border').trim()};
+}
+function redrawCharts(){setTimeout(drawCharts,50)}
+
+function drawCharts(){
+  const cc=getChartColors();
+  Object.values(charts).forEach(c=>{try{c.destroy()}catch(e){}});
+  charts={};
+
+  // Revenue chart
+  const months=['Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May','Jun'];
+  const revenue=[42000,51000,38000,67000,55000,71000,48000,59000,64000,72000,58000,81000];
+  charts.rev=new Chart($('revenueChart'),{type:'line',data:{labels:months,datasets:[{
+    label:'Revenue',data:revenue,borderColor:'#6c63ff',backgroundColor:'rgba(108,99,255,.15)',
+    fill:true,tension:.4,pointBackgroundColor:'#6c63ff',pointRadius:4,pointHoverRadius:7
+  }]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{x:{grid:{color:cc.grid},ticks:{color:cc.text,font:{family:'DM Sans'}}},
+    y:{grid:{color:cc.grid},ticks:{color:cc.text,font:{family:'DM Sans'},callback:v=>'₹'+v.toLocaleString('en-IN')}}}}});
+
+  // Top products chart
+  const topP=[...DB.products].sort((a,b)=>b.sold-a.sold).slice(0,5);
+  charts.top=new Chart($('topProductsChart'),{type:'doughnut',data:{
+    labels:topP.map(p=>p.name),
+    datasets:[{data:topP.map(p=>p.sold),backgroundColor:['#6c63ff','#2dd98f','#4db8ff','#ffaa3c','#ff5c7a'],borderWidth:0,hoverOffset:8}]
+  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:cc.text,font:{family:'DM Sans'},padding:10,boxWidth:10}}}}});
+
+  // Day of week
+  const dayLabels=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const daySales=Array(7).fill(0);
+  DB.sales.forEach(s=>{daySales[new Date(s.date).getDay()]+=s.total;});
+  charts.dow=new Chart($('dowChart'),{type:'bar',data:{labels:dayLabels,datasets:[{
+    label:'Sales',data:daySales,backgroundColor:'rgba(56,217,217,.7)',borderRadius:6,borderSkipped:false
+  }]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{x:{grid:{display:false},ticks:{color:cc.text}},y:{grid:{color:cc.grid},ticks:{color:cc.text,callback:v=>'₹'+v.toLocaleString('en-IN')}}}}});
+
+  // Customer tier chart
+  const tiers={Gold:0,Silver:0,Bronze:0};
+  DB.customers.forEach(c=>{tiers[getLoyaltyTier(c.total_spent)]++;});
+  charts.cat=new Chart($('custCatChart'),{type:'pie',data:{
+    labels:Object.keys(tiers),
+    datasets:[{data:Object.values(tiers),backgroundColor:['#ffaa3c','#9aa0b8','#cd7f32'],borderWidth:0,hoverOffset:6}]
+  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:cc.text,font:{family:'DM Sans'},padding:10,boxWidth:10}}}}});
+
+  // Forecast
+  if($('forecastChart')){
+    charts.forecast=new Chart($('forecastChart'),{type:'line',data:{
+      labels:['Jan','Feb','Mar','Apr','May','Jun'],
+      datasets:[
+        {label:'Projected',data:[68000,72000,75000,80000,84000,89000],borderColor:'#6c63ff',backgroundColor:'rgba(108,99,255,.1)',fill:true,tension:.4,borderDash:[5,5]},
+        {label:'Target',data:[65000,70000,73000,77000,82000,87000],borderColor:'#2dd98f',backgroundColor:'rgba(45,217,143,.06)',fill:true,tension:.4}
+      ]
+    },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:cc.text,font:{family:'DM Sans'}}}},
+      scales:{x:{grid:{color:cc.grid},ticks:{color:cc.text}},y:{grid:{color:cc.grid},ticks:{color:cc.text,callback:v=>'₹'+v.toLocaleString('en-IN')}}}}});
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// CUSTOMERS
+// ═══════════════════════════════════════════════════
+function renderCustomers(){
+  const q=($('cust-search')?.value||'').toLowerCase();
+  const tier=$('cust-filter')?.value||'';
+  let list=DB.customers.filter(c=>{
+    const match=`${c.fname} ${c.lname} ${c.email} ${c.phone}`.toLowerCase().includes(q);
+    const tierMatch=!tier||getLoyaltyTier(c.total_spent)===tier;
+    return match&&tierMatch;
+  });
+  if(!list.length){$('customer-grid').innerHTML='<div class="empty-state"><div class="empty-icon">👥</div><p>No customers found</p></div>';return;}
+  $('customer-grid').innerHTML=list.map(c=>{
+    const tier=getLoyaltyTier(c.total_spent);
+    const pct=getLoyaltyPct(c.total_spent);
+    const cSales=DB.sales.filter(s=>s.customer_id===c.id).length;
+    return`<div class="customer-card" onclick="showCustDetail(${c.id})">
+      <div class="customer-top">
+        <div class="cust-avatar" style="background:${getColor(c.fname)}">${c.fname[0]}${c.lname[0]}</div>
+        <div style="min-width:0">
+          <div class="cust-name">${c.fname} ${c.lname}</div>
+          <div class="cust-email">${c.email}</div>
+        </div>
+        <span class="badge ${getBadgeClass(tier)}" style="margin-left:auto">${tier}</span>
+      </div>
+      <div class="cust-stats">
+        <div><div class="cust-stat-val">${fmt(c.total_spent)}</div><div class="cust-stat-label">Total Spent</div></div>
+        <div><div class="cust-stat-val">${cSales}</div><div class="cust-stat-label">Orders</div></div>
+      </div>
+      <div style="margin-top:10px">
+        <div style="display:flex;justify-content:space-between;font-size:.72rem;color:var(--text3);margin-bottom:4px">
+          <span>Loyalty Score</span><span>${pct}%</span>
+        </div>
+        <div class="loyalty-bar"><div class="loyalty-fill" style="width:${pct}%"></div></div>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:12px">
+        <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();editCustomer(${c.id})">✏️ Edit</button>
+        <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();deleteCustomer(${c.id})">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function showCustDetail(id){
+  const c=DB.customers.find(x=>x.id===id);
+  if(!c)return;
+  const cSales=DB.sales.filter(s=>s.customer_id===id);
+  const tier=getLoyaltyTier(c.total_spent);
+  $('cust-detail-body').innerHTML=`
+    <div style="display:flex;gap:16px;align-items:center;margin-bottom:20px">
+      <div style="width:60px;height:60px;border-radius:50%;background:${getColor(c.fname)};display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:700;color:#fff;flex-shrink:0">${c.fname[0]}${c.lname[0]}</div>
+      <div>
+        <div style="font-family:var(--font-head);font-size:1.1rem;font-weight:700">${c.fname} ${c.lname}</div>
+        <div style="color:var(--text2);font-size:.83rem">${c.email} • ${c.phone}</div>
+        <div style="margin-top:6px"><span class="badge ${getBadgeClass(tier)}">${tier} Member</span></div>
+      </div>
+    </div>
+    <div class="stat-grid" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:16px">
+      <div style="background:var(--bg2);padding:12px;border-radius:10px;text-align:center"><div style="font-family:var(--font-head);font-weight:700;font-size:1.1rem">${fmt(c.total_spent)}</div><div style="font-size:.72rem;color:var(--text3)">Total Spent</div></div>
+      <div style="background:var(--bg2);padding:12px;border-radius:10px;text-align:center"><div style="font-family:var(--font-head);font-weight:700;font-size:1.1rem">${cSales.length}</div><div style="font-size:.72rem;color:var(--text3)">Orders</div></div>
+      <div style="background:var(--bg2);padding:12px;border-radius:10px;text-align:center"><div style="font-family:var(--font-head);font-weight:700;font-size:1.1rem">${getLoyaltyPct(c.total_spent)}%</div><div style="font-size:.72rem;color:var(--text3)">Loyalty</div></div>
+    </div>
+    <h4 style="font-family:var(--font-head);font-size:.88rem;margin-bottom:10px">Purchase History</h4>
+    <table><thead><tr><th>Product</th><th>Qty</th><th>Amount</th><th>Date</th></tr></thead><tbody>
+      ${cSales.map(s=>{const p=DB.products.find(x=>x.id===s.product_id)||{name:'?',image:''};
+        return`<tr><td>${p.image} ${p.name}</td><td>${s.qty}</td><td style="color:var(--green)">${fmt(s.total)}</td><td>${s.date}</td></tr>`;
+      }).join('')}
+    </tbody></table>
+  `;
+  openModal('custDetailModal');
+}
+
+function saveCustomer(){
+  const id=parseInt($('cust-edit-id').value||0);
+  const obj={fname:$('cust-fname').value.trim(),lname:$('cust-lname').value.trim(),email:$('cust-email').value.trim(),phone:$('cust-phone').value.trim(),address:$('cust-address').value.trim(),total_spent:0,visits:0,joined:today()};
+  if(!obj.fname||!obj.email){toast('Name and email required','error');return;}
+  if(id){const c=DB.customers.find(x=>x.id===id);Object.assign(c,obj);toast('Customer updated','success');}
+  else{obj.id=Date.now();DB.customers.push(obj);toast('Customer added','success');}
+  closeModal('customerModal');
+  renderCustomers();
+}
+
+function editCustomer(id){
+  const c=DB.customers.find(x=>x.id===id);
+  if(!c)return;
+  $('cust-modal-title').textContent='Edit Customer';
+  $('cust-edit-id').value=c.id;
+  $('cust-fname').value=c.fname;$('cust-lname').value=c.lname;
+  $('cust-email').value=c.email;$('cust-phone').value=c.phone;$('cust-address').value=c.address;
+  openModal('customerModal');
+}
+
+function deleteCustomer(id){
+  if(!confirm('Delete this customer?'))return;
+  DB.customers=DB.customers.filter(c=>c.id!==id);
+  toast('Customer deleted','info');renderCustomers();
+}
+
+// ═══════════════════════════════════════════════════
+// PRODUCTS
+// ═══════════════════════════════════════════════════
+function renderProducts(){
+  const q=($('prod-search')?.value||'').toLowerCase();
+  const cat=$('prod-cat')?.value||'';
+  const sf=$('prod-stock-filter')?.value||'';
+  let list=DB.products.filter(p=>{
+    const match=p.name.toLowerCase().includes(q)||p.desc.toLowerCase().includes(q);
+    const catMatch=!cat||p.category===cat;
+    const stockMatch=!sf||(sf==='low'?p.stock<=p.low:p.stock>p.low);
+    return match&&catMatch&&stockMatch;
+  });
+  if(!list.length){$('product-grid').innerHTML='<div class="empty-state"><div class="empty-icon">📦</div><p>No products found</p></div>';return;}
+  $('product-grid').innerHTML=list.map(p=>{
+    const pct=Math.min(100,Math.round(p.stock/100*100));
+    const isLow=p.stock<=p.low;
+    return`<div class="product-card" onclick="editProduct(${p.id})">
+      <div class="product-img">
+        ${p.image.startsWith('http')?`<img src="${p.image}" alt="${p.name}">`:`<span>${p.image}</span>`}
+        ${isLow?`<span class="product-badge">Low Stock</span>`:''}
+      </div>
+      <div class="product-info">
+        <div class="product-name">${p.name}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div class="product-price">${fmt(p.price)}</div>
+          <span class="badge badge-blue" style="font-size:.65rem">${p.category}</span>
+        </div>
+        <div class="product-stock">Stock: ${p.stock} units • Sold: ${p.sold}</div>
+        <div class="stock-bar"><div class="stock-fill ${isLow?'low':p.stock<30?'mid':''}" style="width:${Math.min(100,p.stock)}%"></div></div>
+        <div style="display:flex;gap:6px;margin-top:10px" onclick="event.stopPropagation()">
+          <button class="btn btn-sm btn-success" onclick="quickRestock(${p.id})">+ Stock</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteProduct(${p.id})">🗑️</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function saveProduct(){
+  const id=parseInt($('prod-edit-id').value||0);
+  const obj={name:$('prod-name').value.trim(),category:$('prod-category').value,price:parseFloat($('prod-price').value)||0,stock:parseInt($('prod-stock').value)||0,low:parseInt($('prod-low').value)||5,image:$('prod-image').value.trim()||'📦',desc:$('prod-desc').value.trim(),sold:0};
+  if(!obj.name||!obj.price){toast('Name and price required','error');return;}
+  if(id){const p=DB.products.find(x=>x.id===id);const sold=p.sold;Object.assign(p,obj);p.sold=sold;toast('Product updated','success');}
+  else{obj.id=Date.now();DB.products.push(obj);toast('Product added','success');}
+  closeModal('productModal');
+  renderProducts();
+  renderDashStats();
+}
+
+function editProduct(id){
+  const p=DB.products.find(x=>x.id===id);
+  if(!p)return;
+  $('prod-modal-title').textContent='Edit Product';
+  $('prod-edit-id').value=p.id;
+  $('prod-name').value=p.name;$('prod-category').value=p.category;
+  $('prod-price').value=p.price;$('prod-stock').value=p.stock;
+  $('prod-low').value=p.low;$('prod-image').value=p.image;$('prod-desc').value=p.desc;
+  openModal('productModal');
+}
+
+function deleteProduct(id){
+  if(!confirm('Delete this product?'))return;
+  DB.products=DB.products.filter(p=>p.id!==id);
+  toast('Product deleted','info');renderProducts();
+}
+
+// ═══════════════════════════════════════════════════
+// SALES
+// ═══════════════════════════════════════════════════
+let salesFilter={from:'',to:''};
+function renderSalesStats(){
+  const total=DB.sales.reduce((a,s)=>a+s.total,0);
+  const avg=DB.sales.length?Math.round(total/DB.sales.length):0;
+  const methods={};DB.sales.forEach(s=>methods[s.method]=(methods[s.method]||0)+1);
+  const topMethod=Object.entries(methods).sort((a,b)=>b[1]-a[1])[0]?.[0]||'—';
+  $('sales-stats').innerHTML=`
+    <div class="stat-card accent-green"><div class="stat-icon">💰</div><div class="stat-val">${fmt(total)}</div><div class="stat-label">Total Revenue</div></div>
+    <div class="stat-card accent-blue"><div class="stat-icon">🛒</div><div class="stat-val">${DB.sales.length}</div><div class="stat-label">Total Orders</div></div>
+    <div class="stat-card accent-purple"><div class="stat-icon">📊</div><div class="stat-val">${fmt(avg)}</div><div class="stat-label">Avg Order Value</div></div>
+    <div class="stat-card accent-cyan"><div class="stat-icon">💳</div><div class="stat-val" style="font-size:1rem">${topMethod}</div><div class="stat-label">Top Payment</div></div>
+  `;
+}
+
+function renderSalesTable(){
+  let list=[...DB.sales].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  if(salesFilter.from)list=list.filter(s=>s.date>=salesFilter.from);
+  if(salesFilter.to)list=list.filter(s=>s.date<=salesFilter.to);
+  if(!list.length){$('sales-table').innerHTML='<div class="empty-state"><div class="empty-icon">🛒</div><p>No sales found</p></div>';return;}
+  $('sales-table').innerHTML=`<table><thead><tr><th>#</th><th>Customer</th><th>Product</th><th>Qty</th><th>Amount</th><th>Method</th><th>Date</th></tr></thead><tbody>
+    ${list.map(s=>{
+      const c=DB.customers.find(x=>x.id===s.customer_id)||{fname:'?',lname:''};
+      const p=DB.products.find(x=>x.id===s.product_id)||{name:'?',image:''};
+      return`<tr>
+        <td style="color:var(--text3)">#${s.id}</td>
+        <td>${c.fname} ${c.lname}</td>
+        <td>${p.image} ${p.name}</td>
+        <td>${s.qty}</td>
+        <td style="font-weight:700;color:var(--green)">${fmt(s.total)}</td>
+        <td><span class="badge badge-purple">${s.method}</span></td>
+        <td>${s.date}</td>
+      </tr>`;
+    }).join('')}
+  </tbody></table>`;
+}
+
+function filterSales(){salesFilter={from:$('sales-from').value,to:$('sales-to').value};renderSalesTable();}
+function clearSalesFilter(){salesFilter={from:'',to:''};$('sales-from').value='';$('sales-to').value='';renderSalesTable();}
+
+function populateSaleForm(){
+  $('sale-customer').innerHTML=DB.customers.map(c=>`<option value="${c.id}">${c.fname} ${c.lname}</option>`).join('');
+  $('sale-product').innerHTML=DB.products.map(p=>`<option value="${p.id}" data-price="${p.price}">${p.image} ${p.name} (${p.stock} in stock)</option>`).join('');
+  $('sale-date').value=today();
+  updateSalePrice();
+}
+
+function updateSalePrice(){
+  const sel=$('sale-product');
+  if(!sel.options.length)return;
+  const price=parseFloat(sel.options[sel.selectedIndex]?.dataset?.price||0);
+  const qty=parseInt($('sale-qty')?.value||1);
+  $('sale-price').value=price;
+  $('sale-total').value=price*qty;
+}
+
+function saveSale(){
+  const prodSel=$('sale-product');
+  const pid=parseInt(prodSel.value);
+  const qty=parseInt($('sale-qty').value)||1;
+  const prod=DB.products.find(x=>x.id===pid);
+  if(!prod){toast('Invalid product','error');return;}
+  if(prod.stock<qty){toast(`Only ${prod.stock} units available`,'error');return;}
+  const sale={id:Date.now(),customer_id:parseInt($('sale-customer').value),product_id:pid,qty,price:prod.price,total:prod.price*qty,method:$('sale-method').value,date:$('sale-date').value};
+  prod.stock-=qty;prod.sold+=qty;
+  const cust=DB.customers.find(x=>x.id===sale.customer_id);
+  if(cust)cust.total_spent+=sale.total;
+  DB.sales.push(sale);
+  toast(`Sale recorded — ${fmt(sale.total)}`,'success');
+  closeModal('saleModal');
+  renderSalesTable();
+  renderSalesStats();
+  renderDashStats();
+  renderProducts();
+  if(prod.stock<=prod.low){
+    DB.notifications.unshift({type:'red',text:`${prod.name} low stock after sale (${prod.stock} left)`,time:'Just now'});
+    renderNotifs();
+    toast(`⚠️ ${prod.name} is low on stock`,'error');
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// AI INSIGHTS
+// ═══════════════════════════════════════════════════
+function generateInsights(){
+  const topSold=[...DB.products].sort((a,b)=>b.sold-a.sold)[0];
+  const declining=[...DB.products].sort((a,b)=>a.sold-b.sold)[0];
+  const dayLabels=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const daySales=Array(7).fill(0);
+  DB.sales.forEach(s=>{daySales[new Date(s.date).getDay()]+=s.total;});
+  const bestDay=dayLabels[daySales.indexOf(Math.max(...daySales))];
+  const needRestock=DB.products.filter(p=>p.stock<=p.low).map(p=>p.name).join(', ')||'None';
+  const topCust=DB.customers.reduce((a,b)=>b.total_spent>a.total_spent?b:a,DB.customers[0]);
+  const totalRev=DB.sales.reduce((a,s)=>a+s.total,0);
+  const avgOrder=Math.round(totalRev/DB.sales.length);
+
+  const insights=[
+    {icon:'🏆',title:'Best Selling Product',text:`<strong>${topSold.name}</strong> leads with <strong>${topSold.sold} units sold</strong>. Consider increasing its stock to meet demand.`,meta:'Updated just now'},
+    {icon:'📉',title:'Declining Product',text:`<strong>${declining.name}</strong> has the lowest sales (${declining.sold} units). Consider a promotion or bundling strategy.`,meta:'Based on all-time data'},
+    {icon:'📅',title:'Best Sales Day',text:`Your peak sales day is <strong>${bestDay}</strong>. Schedule staff and promotions around this day for maximum impact.`,meta:'Weekly pattern analysis'},
+    {icon:'📦',title:'Restock Required',text:`Products needing immediate restock: <strong>${needRestock}</strong>. Delay in restocking could impact revenue.`,meta:'Low stock analysis'},
+    {icon:'👑',title:'Top Customer',text:`<strong>${topCust.fname} ${topCust.lname}</strong> has spent <strong>${fmt(topCust.total_spent)}</strong>. Send them a loyalty reward!`,meta:'Customer analytics'},
+    {icon:'💡',title:'Revenue Insight',text:`Average order value is <strong>${fmt(avgOrder)}</strong>. Try upselling strategies to increase it by 15-20%.`,meta:'Sales optimization'},
+    {icon:'📈',title:'Growth Forecast',text:`Based on current trends, monthly revenue is projected to grow <strong>12-15%</strong> over the next quarter.`,meta:'AI prediction model'},
+    {icon:'🎯',title:'Marketing Suggestion',text:`Your ${topSold.category} category performs best. A targeted campaign in this segment could boost sales by 20%+.`,meta:'Category analysis'},
+  ];
+
+  $('insight-grid').innerHTML=insights.map(i=>`
+    <div class="insight-card">
+      <div class="insight-icon">${i.icon}</div>
+      <div class="insight-title">${i.title}</div>
+      <div class="insight-text">${i.text}</div>
+      <div class="insight-meta">🕐 ${i.meta}</div>
+    </div>
+  `).join('');
+
+  setTimeout(()=>{if($('forecastChart')&&!charts.forecast)drawCharts();},100);
+  toast('AI insights generated','success');
+}
+
+// ═══════════════════════════════════════════════════
+// NOTIFICATIONS
+// ═══════════════════════════════════════════════════
+function renderNotifs(){
+  $('notif-list').innerHTML=DB.notifications.slice(0,8).map(n=>`
+    <div class="notif-item">
+      <div class="notif-dot2" style="background:${n.type==='red'?'var(--red)':n.type==='green'?'var(--green)':n.type==='orange'?'var(--orange)':'var(--blue)'}"></div>
+      <div><div class="notif-text">${n.text}</div><div class="notif-time">${n.time}</div></div>
+    </div>
+  `).join('');
+}
+function toggleNotif(){
+  $('notif-panel').classList.toggle('open');
+  renderNotifs();
+}
+function clearNotifs(){
+  DB.notifications=[];
+  $('notif-panel').innerHTML='<div class="notif-header">Notifications</div><div style="padding:20px;text-align:center;color:var(--text3);font-size:.85rem">All clear!</div>';
+}
+document.addEventListener('click',e=>{
+  if(!e.target.closest('#notif-panel')&&!e.target.closest('.btn-icon'))
+    $('notif-panel').classList.remove('open');
+});
+
+// ═══════════════════════════════════════════════════
+// CHATBOT
+// ═══════════════════════════════════════════════════
+const CHAT_SUGGESTIONS=['Top selling product','Low stock items','Best customer','Revenue this month','Restocking advice'];
+let chatOpen=false;
+
+function toggleChat(){
+  chatOpen=!chatOpen;
+  $('chat-window').classList.toggle('open',chatOpen);
+  if(chatOpen&&!$('chat-messages').children.length)initChat();
+}
+
+function initChat(){
+  renderChatSuggestions();
+  addChatMsg('bot','👋 Hi! I\'m BizAI, your smart business assistant. Ask me anything about your sales, inventory, or customers!');
+}
+
+function renderChatSuggestions(){
+  $('chat-suggestions').innerHTML=CHAT_SUGGESTIONS.map(s=>`<span class="chip" onclick="sendChatMsg('${s}')">${s}</span>`).join('');
+}
+
+function addChatMsg(role,text){
+  const d=document.createElement('div');
+  d.className=`chat-msg ${role}`;
+  const now=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  d.innerHTML=`<div class="msg-bubble">${text}</div><div class="msg-time">${now}</div>`;
+  $('chat-messages').appendChild(d);
+  $('chat-messages').scrollTop=9999;
+}
+
+function showTyping(){
+  const d=document.createElement('div');
+  d.className='chat-msg bot';d.id='typing';
+  d.innerHTML='<div class="msg-bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div>';
+  $('chat-messages').appendChild(d);
+  $('chat-messages').scrollTop=9999;
+}
+function removeTyping(){const t=$('typing');if(t)t.remove();}
+
+function getChatResponse(q){
+  const ql=q.toLowerCase();
+  const topSold=[...DB.products].sort((a,b)=>b.sold-a.sold)[0];
+  const lowStock=DB.products.filter(p=>p.stock<=p.low);
+  const topCust=DB.customers.reduce((a,b)=>b.total_spent>a.total_spent?b:a,DB.customers[0]);
+  const totalRev=DB.sales.reduce((a,s)=>a+s.total,0);
+  const monthSales=DB.sales.filter(s=>new Date(s.date).getMonth()===new Date().getMonth()).reduce((a,s)=>a+s.total,0);
+  const daySales=Array(7).fill(0);DB.sales.forEach(s=>{daySales[new Date(s.date).getDay()]+=s.total;});
+  const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const bestDay=days[daySales.indexOf(Math.max(...daySales))];
+
+  if(ql.includes('top sell')||ql.includes('best sell')||ql.includes('most sell'))
+    return`🏆 <strong>${topSold.name}</strong> is your top seller with <strong>${topSold.sold} units sold</strong>. It's in the ${topSold.category} category, priced at ${fmt(topSold.price)}.`;
+  if(ql.includes('low stock')||ql.includes('restock'))
+    return lowStock.length?`⚠️ <strong>${lowStock.length} product(s)</strong> need restocking:<br>${lowStock.map(p=>`• ${p.name} (${p.stock} left)`).join('<br>')}`:`✅ All products are well stocked! Great job.`;
+  if(ql.includes('customer')||ql.includes('who buy'))
+    return`👑 Your best customer is <strong>${topCust.fname} ${topCust.lname}</strong>, who has spent <strong>${fmt(topCust.total_spent)}</strong> across ${DB.customers.length} total customers.`;
+  if(ql.includes('revenue')||ql.includes('sales')||ql.includes('earn'))
+    return`💰 Total revenue: <strong>${fmt(totalRev)}</strong><br>This month: <strong>${fmt(monthSales)}</strong><br>Total orders: <strong>${DB.sales.length}</strong>`;
+  if(ql.includes('best day')||ql.includes('day of week'))
+    return`📅 Your best sales day is <strong>${bestDay}</strong>! Schedule extra promotions and staff on that day.`;
+  if(ql.includes('product')||ql.includes('inventory')||ql.includes('stock'))
+    return`📦 You have <strong>${DB.products.length} products</strong> across ${[...new Set(DB.products.map(p=>p.category))].length} categories. ${lowStock.length} need restocking.`;
+  if(ql.includes('insight')||ql.includes('suggest')||ql.includes('advice'))
+    return`💡 Quick tips:<br>• Promote <strong>${topSold.name}</strong> — it's your winner<br>• Restock <strong>${lowStock.length} items</strong> urgently<br>• ${bestDay} is your peak day — plan ahead!`;
+  if(ql.includes('hello')||ql.includes('hi ')||ql==='hi')
+    return`Hello! 👋 I'm here to help. You can ask about sales, inventory, customers, or get AI recommendations!`;
+  return`🤖 I can help with: top products, low stock, customer insights, revenue, best sales days, and business tips. Try asking one of those!`;
+}
+
+function sendChatMsg(msg){
+  $('chat-input').value=msg;
+  sendChat();
+}
+
+function sendChat(){
+  const msg=$('chat-input').value.trim();
+  if(!msg)return;
+  addChatMsg('user',msg);
+  $('chat-input').value='';
+  showTyping();
+  setTimeout(()=>{removeTyping();addChatMsg('bot',getChatResponse(msg));},900+Math.random()*600);
+}
+
+// ═══════════════════════════════════════════════════
+// GLOBAL SEARCH
+// ═══════════════════════════════════════════════════
+function globalSearch(q){
+  if(!q){return;}
+  // Navigate to most relevant section
+  const ql=q.toLowerCase();
+  if(ql.length<2)return;
+}
+
+// ═══════════════════════════════════════════════════
+// EXPORTS
+// ═══════════════════════════════════════════════════
+function exportSalesCSV(){
+  const rows=['#,Customer,Product,Qty,Amount,Method,Date'];
+  DB.sales.forEach(s=>{
+    const c=DB.customers.find(x=>x.id===s.customer_id)||{fname:'?',lname:''};
+    const p=DB.products.find(x=>x.id===s.product_id)||{name:'?'};
+    rows.push(`${s.id},"${c.fname} ${c.lname}","${p.name}",${s.qty},${s.total},${s.method},${s.date}`);
+  });
+  exportCSV('sales_report.csv',rows);
+  logReport('Sales Report','CSV');
+}
+function exportCustomersCSV(){
+  const rows=['ID,Name,Email,Phone,Total Spent,Tier,Joined'];
+  DB.customers.forEach(c=>rows.push(`${c.id},"${c.fname} ${c.lname}",${c.email},${c.phone},${c.total_spent},${getLoyaltyTier(c.total_spent)},${c.joined}`));
+  exportCSV('customers_report.csv',rows);
+  logReport('Customer Report','CSV');
+}
+function exportInventoryCSV(){
+  const rows=['ID,Name,Category,Price,Stock,Sold,Low Alert'];
+  DB.products.forEach(p=>rows.push(`${p.id},"${p.name}",${p.category},${p.price},${p.stock},${p.sold},${p.low}`));
+  exportCSV('inventory_report.csv',rows);
+  logReport('Inventory Report','CSV');
+}
+function exportInsightsPDF(){
+  const topSold=[...DB.products].sort((a,b)=>b.sold-a.sold)[0];
+  const content=`BizCRM AI Insights Report\nGenerated: ${new Date().toLocaleString()}\n\nTop Selling: ${topSold.name} (${topSold.sold} units)\nTotal Revenue: ${fmt(DB.sales.reduce((a,s)=>a+s.total,0))}\nCustomers: ${DB.customers.length}\nProducts: ${DB.products.length}\nLow Stock Items: ${DB.products.filter(p=>p.stock<=p.low).length}`;
+  const a=document.createElement('a');
+  a.href='data:text/plain;charset=utf-8,'+encodeURIComponent(content);
+  a.download='ai_insights_report.txt';a.click();
+  toast('AI Insights report downloaded','success');
+  logReport('AI Insights Summary','PDF');
+}
+
+const reportHistory=[];
+function logReport(name,type){
+  reportHistory.unshift({name,type,date:new Date().toLocaleString()});
+  renderReportHistory();
+}
+function renderReportHistory(){
+  if(!$('report-history'))return;
+  if(!reportHistory.length){$('report-history').innerHTML='<div class="empty-state"><div class="empty-icon">📄</div><p>No reports generated yet</p></div>';return;}
+  $('report-history').innerHTML=`<table><thead><tr><th>Report Name</th><th>Type</th><th>Generated At</th></tr></thead><tbody>
+    ${reportHistory.map(r=>`<tr><td>${r.name}</td><td><span class="badge ${r.type==='CSV'?'badge-green':'badge-blue'}">${r.type}</span></td><td style="color:var(--text2)">${r.date}</td></tr>`).join('')}
+  </tbody></table>`;
+}
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+function init(){
+  // Date
+  $('dash-date').textContent=new Date().toLocaleDateString('en-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+  // Reset modals
+  document.querySelectorAll('.modal-overlay').forEach(m=>{
+    m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});
+  });
+
+  // Add button handlers
+  $('customerModal').addEventListener('show',()=>{$('cust-modal-title').textContent='Add Customer';$('cust-edit-id').value='';['cust-fname','cust-lname','cust-email','cust-phone','cust-address'].forEach(id=>$(id).value='');});
+
+  // Render everything
+  renderDashStats();
+  renderLowStockTable();
+  renderRecentTx();
+  renderCustomers();
+  renderProducts();
+  renderSalesTable();
+  renderSalesStats();
+  renderReportHistory();
+  renderNotifs();
+
+  // Populate sale form dropdowns
+  const saleModal=$('saleModal');
+  saleModal.addEventListener('click',()=>{});
+  document.querySelectorAll('[onclick*="openModal(\'saleModal\')"]').forEach(btn=>{
+    btn.addEventListener('click',populateSaleForm);
+  });
+
+  // Intercept sale modal open
+  const origOpen=window.openModal;
+  window.openModal=function(id){
+    if(id==='saleModal')populateSaleForm();
+    if(id==='customerModal'){$('cust-modal-title').textContent='Add Customer';$('cust-edit-id').value='';['cust-fname','cust-lname','cust-email','cust-phone','cust-address'].forEach(el=>$(el).value='');}
+    if(id==='productModal'){$('prod-modal-title').textContent='Add Product';$('prod-edit-id').value='';['prod-name','prod-price','prod-stock','prod-low','prod-image','prod-desc'].forEach(el=>$(el).value='');}
+    origOpen(id);
+  };
+
+  setTimeout(drawCharts,300);
+}
+
+window.addEventListener('DOMContentLoaded',init);
+</script>
+</body>
+</html>
